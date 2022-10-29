@@ -10,6 +10,8 @@ class OrderLine:
     sku: str
     quantity: int
 
+class OutOfStock(Exception):
+    """Out of Stock batch error."""
 
 class Batch:
     def __init__(self, ref: str, qty: int, sku: str, eta: date | None) -> None:
@@ -43,7 +45,7 @@ class Batch:
             self._allocations.remove(line)
 
     def can_allocate(self, line: OrderLine) -> bool:
-        return self.sku == line.sku and self._purchased_quantity >= line.quantity
+        return self.sku == line.sku and self.available_quantity >= line.quantity
     
     @property
     def allocated_quantity(self) -> int:
@@ -55,7 +57,11 @@ class Batch:
 
 
 def allocate(line: OrderLine, batches: list[Batch]) -> str:
-    batch = next(b for b in sorted(batches) if b.can_allocate(line))
+    try:
+        batch = next(b for b in sorted(batches) if b.can_allocate(line))
+    except StopIteration:
+        raise OutOfStock(f"Article {line.sku} out of stock from batch")
+
     batch.allocate(line) 
     return batch.reference
     

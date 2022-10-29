@@ -35,19 +35,6 @@ class TestBatchAllocating:
 
         assert batch.available_quantity == 10
 
-    @pytest.mark.skip("Тест пока не нужен")
-    def test_allocating_to_a_batch_is_sku_not_equal_failed(self):
-        batch, order_line = make_batch_and_line(
-            batch_sku="SMALL-TABLE",
-            line_sku="BIG-TABLE",
-            batch_qty=12,
-            line_qty=2,
-            )
-        
-        with pytest.raises(ValueError) as e:
-            batch.allocate(line=order_line)
-            
-            assert str(e) == "Order line sky not equal batch sku !"
 
 class TestBatchCanAllocating:
     # TODO: Переписать на parametrize
@@ -95,6 +82,4 @@ class TestBatchDeallocating:
 
         assert batch.available_quantity == 20
         
-
-    
     
