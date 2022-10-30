@@ -8,6 +8,7 @@ packages = [{include = "architecture_patterns_python"}]
 
 [tool.poetry.dependencies]
 python = "^3.10"
+sqlalchemy = "^1.4.42"
 
 
 [tool.poetry.group.dev.dependencies]
