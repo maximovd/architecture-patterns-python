@@ -1,10 +1,10 @@
 import abc
-import re
-from typing import Any
 
 from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import
 
 from app import model
+
 
 class AbstractRepository(abc.ABC):
     
@@ -13,13 +13,17 @@ class AbstractRepository(abc.ABC):
         ...
     
     @abc.abstractmethod
-    def get(slef, reference: str) -> model.Batch:
+    def get(self, reference: str) -> model.Batch:
+        ...
+
+    @abc.abstractmethod()
+    def list(self) -> list[model.Batch]:
         ...
 
 
 class SqlAlchemyRepository(AbstractRepository):
-    """Repository fro SqlAlchmey support."""
-    def __init__(self, session: Session) -> None: 
+    """Repository for SqlAlchemy support."""
+    def __init__(self, session: Session) -> None:
         self._session = session
         super().__init__()
     
@@ -47,4 +51,5 @@ class FakeRepository(AbstractRepository):
     
     def list(self) -> list[model.Batch]:
         return list(self._batches)
-        
+
+

@@ -1,7 +1,4 @@
 from datetime import date
-from re import L
-
-import pytest
 
 from app.model import Batch, OrderLine
 
@@ -17,6 +14,7 @@ def make_batch_and_line(
         Batch(ref="batch-001", sku=batch_sku, qty=batch_qty, eta=date.today()),
         OrderLine(sku=line_sku, order_id="test-ref", quantity=line_qty)
     )
+
 
 class TestBatchAllocating:
     def test_allocating_to_a_batch_reduces_the_available_qty_success(self):

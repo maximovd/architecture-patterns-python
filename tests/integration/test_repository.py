@@ -1,7 +1,6 @@
 from app import repository, model
 
 
-    
 def insert_order_line(session):
     session.execute(
         'INSERT INTO order_lines (orderid, sku, qty)'
