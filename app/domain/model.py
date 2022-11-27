@@ -1,8 +1,9 @@
+import typing
 from datetime import date
 from dataclasses import dataclass
 
+from app.domain import events
 
-# TODO: Переписать на Pydantic
 
 @dataclass(frozen=True)
 class OrderLine:
@@ -10,8 +11,10 @@ class OrderLine:
     sku: str
     quantity: int
 
+
 class OutOfStock(Exception):
     """Out of Stock batch error."""
+
 
 class Batch:
     def __init__(self, ref: str, qty: int, sku: str, eta: date | None) -> None:
@@ -44,6 +47,9 @@ class Batch:
         if line in self._allocations:
             self._allocations.remove(line)
 
+    def deallocate_one(self) -> OrderLine:
+        return self._allocations.pop()
+
     def can_allocate(self, line: OrderLine) -> bool:
         return self.sku == line.sku and self.available_quantity >= line.quantity
     
@@ -65,3 +71,37 @@ def allocate(line: OrderLine, batches: list[Batch]) -> str:
     batch.allocate(line) 
     return batch.reference
     
+
+
+class Product:
+    """
+    Агрегат для работы с позциями заказа.
+     - Главным id продукта является sku
+     - Класс содержит ссылку на коллекцию партий `batches`
+    """
+
+    def __init__(self, sku: str, batches: list[Batch], version_number: int = 0) -> None:
+        self.sku = sku
+        self.batches = batches
+        self.version_number = version_number
+        self.events: list[events.Event] = []
+
+    def allocate(self, line: OrderLine) -> str | None:
+        """Резревирование товара в партии."""
+        try:
+            batch = next(b for b in sorted(self.batches) if b.can_allocate(line))
+            batch.allocate(line)
+            self.version_number += 1
+            return batch.reference
+        except StopIteration:
+            self.events.append(events.OutOfStock(line.sku))
+            return None
+
+    def change_batch_quantity(self, ref: str, qty: int):
+        batch = next(b for b in self.batches if b.reference == ref)
+        batch._purchased_quantity = qty
+
+        while batch.available_quantity < 0:
+            line = batch.deallocate_one()
+            self.events.append(events.AllocationRequired(line.order_id, line.sku, line.qty))
+
